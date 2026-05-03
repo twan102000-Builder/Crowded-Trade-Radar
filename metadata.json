@@ -1,0 +1,6 @@
+{
+  "name": "Crowded-Trade Radar",
+  "description": "Real-time GEX, 0DTE index flows, and meme-stock sentiment scanner with historical backtesting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["Real-time data visualization", "Quantitative analysis", "AI insights"]
+}
