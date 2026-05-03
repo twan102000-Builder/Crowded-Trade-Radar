@@ -26,6 +26,17 @@ interface MarketData {
   borrow_rate_pct: number;
   social_sentiment: number; // -1 to 1
   gex: number;
+  risk_score: number; // 0 to 100
+  stop_loss: number;
+}
+
+function calculateRiskScore(data: Partial<MarketData>): number {
+  let score = 0;
+  if (data.borrow_rate_pct && data.borrow_rate_pct > 20) score += 30;
+  if (data.iv_change_pct && Math.abs(data.iv_change_pct) > 0.05) score += 20;
+  if (data.gex && Math.abs(data.gex) > 500000) score += 30;
+  if (data.social_sentiment && Math.abs(data.social_sentiment) > 0.7) score += 20;
+  return Math.min(score, 100);
 }
 
 function generateMockMarketData(ticker: string): MarketData {
@@ -33,17 +44,26 @@ function generateMockMarketData(ticker: string): MarketData {
   const call_vol = Math.floor(Math.random() * 100000);
   const put_vol = Math.floor(Math.random() * 80000);
   const gex = (call_vol - put_vol) * (spot * 0.002) * (Math.random() * 2);
+  const borrow_rate = ticker === "GME" || ticker === "AMC" ? Math.random() * 50 : Math.random() * 5;
+  const iv_change = (Math.random() - 0.5) * 0.1;
+  const sentiment = (Math.random() - 0.5) * 2;
   
+  const partialData = { borrow_rate_pct: borrow_rate, iv_change_pct: iv_change, gex, social_sentiment: sentiment };
+  const risk_score = calculateRiskScore(partialData);
+  const stop_loss = spot * (1 - (0.02 + Math.random() * 0.05));
+
   return {
     ticker,
     spot_price: spot,
     call_vol,
     put_vol,
     equity_vol: Math.floor(Math.random() * 10000000),
-    iv_change_pct: (Math.random() - 0.5) * 0.1,
-    borrow_rate_pct: ticker === "GME" || ticker === "AMC" ? Math.random() * 50 : Math.random() * 5,
-    social_sentiment: (Math.random() - 0.5) * 2,
-    gex
+    iv_change_pct: iv_change,
+    borrow_rate_pct: borrow_rate,
+    social_sentiment: sentiment,
+    gex,
+    risk_score,
+    stop_loss
   };
 }
 
@@ -54,7 +74,9 @@ async function startServer() {
   app.use(express.json());
 
   // API Routes
-  app.get('/api/radar/scan', (req, res) => {
+  app.get('/api/radar/scan', async (req, res) => {
+    // In a real app, you'd check process.env.POLYGON_API_KEY here
+    // for (const ticker of TICKERS) { fetchFromPolygon(ticker) }
     const data = TICKERS.map(ticker => generateMockMarketData(ticker));
     res.json(data);
   });

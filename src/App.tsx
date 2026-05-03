@@ -25,6 +25,8 @@ interface MarketData {
   borrow_rate_pct: number;
   social_sentiment: number;
   gex: number;
+  risk_score: number;
+  stop_loss: number;
 }
 
 interface BacktestResult {
@@ -195,12 +197,24 @@ export default function App() {
 
                 <div className="space-y-4 font-mono">
                   <div className="flex justify-between items-center pb-3 border-b border-radar-border">
-                    <span className="text-[10px] text-zinc-500 uppercase">Spot Price</span>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-zinc-500 uppercase">Spot Price</span>
+                      <span className="text-[9px] text-zinc-600 uppercase">Stop Loss: ${selectedTicker.stop_loss.toFixed(2)}</span>
+                    </div>
                     <span className="text-xs font-bold">${selectedTicker.spot_price.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center pb-3 border-b border-radar-border">
                     <span className="text-[10px] text-zinc-500 uppercase">Implied Vol</span>
                     <span className="text-xs font-bold text-radar-warning">{(selectedTicker.iv_change_pct * 100).toFixed(1)}%</span>
+                  </div>
+                  <div className="flex justify-between items-center pb-3 border-b border-radar-border">
+                    <span className="text-[10px] text-zinc-500 uppercase">Structural Risk</span>
+                    <span className={cn(
+                      "text-xs font-bold",
+                      selectedTicker.risk_score > 70 ? "text-radar-danger" : selectedTicker.risk_score > 40 ? "text-radar-warning" : "text-radar-success"
+                    )}>
+                      {selectedTicker.risk_score}/100
+                    </span>
                   </div>
                   <div className="flex justify-between items-center pb-3 border-b border-radar-border">
                     <span className="text-[10px] text-zinc-500 uppercase">Net GEX</span>
